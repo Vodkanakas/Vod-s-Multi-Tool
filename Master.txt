@@ -1,0 +1,221 @@
+[Working Folder]
+- wii = ROMS
+- rpi = roms
+- xbox = XBOX_ROMS
+- xbox 360 = XBOX360_ROMS
+
+[800]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\wiixl/software/800xl
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\800
+
+[2600]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\wii2600\roms
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\2600
+
+[5200]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- bios = drive:\wiixl
+- wii games = drive:\wiixl\software\5200
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\5200
+
+[7800]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\wii7800\roms
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\7800
+
+[ST]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\hatari\fd
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\ST
+
+[XEGS]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\wiixl\software\XEGS
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\XEGS
+
+[C64]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\frodo\Games
+- wii renamed cover art = drive:\wiiflow\boxcovers\C64
+
+[Amiga]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- bios = drive:\uae\roms
+- wii games = drive:\uae\floppies
+- m3u = ../Multi Disc\game name
+- wii renamed cover art = drive:\wiiflow\boxcovers\Amiga
+
+[FDS]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\FDS
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\FDS
+
+[NES]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\NES
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\NES
+
+[SNES]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\SNES
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\SNES
+
+[N64]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\wii64\roms
+- wii games = drive:\not64\roms
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\N64
+
+[SG-1000]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Sega\SG-1000
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\SG-1000
+
+[Master System]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Sega\Master System
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\Master System
+
+[Mega Drive|megadrive]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Sega\Mega Drive
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\Mega Drive
+
+[32X]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Sega\32X
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\32X
+
+[Mega CD]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii bios = drive:\genplus\bios
+- wii games = drive:\ROMS\Sega\Mega CD
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\Mega CD
+- wii multi disc = drive:\ROMS\Sega\Mega CD
+- m3u = ../../Multi Disc\Mega CD
+
+[PCE]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\NEC\PCE
+- wii renamed cover art = drive:\wiiflow\boxcovers\NEC\PCE
+
+[PCE CD]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- bios = drive:\wiimednafen
+- wii games = drive:\ROMS\NEC\PCE CD
+- wii renamed cover art = drive:\wiiflow\boxcovers\NEC\PCE CD
+
+[PC-FX]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\NEC\PC-FX
+- wii renamed cover art = drive:\wiiflow\boxcovers\NEC\PC-FX
+- multi disc = drive:\ROMS\Multi Disc\PC-FX
+- m3u = ../../Multi Disc\PC-FX
+
+[MSX]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\MSX\Games
+- wii renamed cover art = drive:\wiiflow\boxcovers\MSX
+
+[Playstation|PS1|PSX]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii bios = drive:\wiisxrx\bios
+- wii games = drive:\wiisxrx\isos
+- wii renamed cover art = drive:\wiiflow\boxcovers\PlayStation
+- wii multi disc = drive:\wiisxrx\isos
+
+[Lynx|atarilynx]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii bios = drive:\wiimednafen
+- wii games = drive:\ROMS\Atari\Lynx
+- wii renamed cover art = drive:\wiiflow\boxcovers\Atari\Lynx
+
+[GW]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\GW
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\GW
+
+[GB]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\GB
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\GB
+
+[GBC]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\GBC
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\GBC
+
+[GBA]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\GBA
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\GBA
+
+[Game Gear]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Sega\Game Gear
+- wii renamed cover art = drive:\wiiflow\boxcovers\Sega\Game Gear
+
+[VB]
+- rpi bios = 
+- rpi games = 
+- rpi renamed cover art = 
+- wii games = drive:\ROMS\Nintendo\VB
+- wii renamed cover art = drive:\wiiflow\boxcovers\Nintendo\VB

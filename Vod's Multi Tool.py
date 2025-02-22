@@ -235,8 +235,6 @@ def get_working_folder(target_system):
 
     # Removed special mapping; use the target system name directly.
     key = target_system
-    print("DEBUG: Working Folder mapping:", mapping)
-    print("DEBUG: Looking for key:", key)
     working_folder = mapping.get(key, "Systems")
     return working_folder\
 
@@ -653,7 +651,6 @@ def main():
             continue
         
         target_system = target_map[target_choice]
-        print(f"Using destination mappings for '{target_system}'.")
         effective_dir = os.path.join(BASE_DIR, get_working_folder(target_system))
 
         if target_choice == "2":

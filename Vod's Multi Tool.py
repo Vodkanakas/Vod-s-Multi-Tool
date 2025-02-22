@@ -639,13 +639,11 @@ def main():
         print("1. Raspberry Pi")
         print("2. Nintendo Wii")
         print("3. Microsoft XBOX")
-        print("4. Microsoft XBOX 360")
         target_choice = input("Enter your choice (0 will exit): ").strip()
         target_map = {
             "1": "rpi",
             "2": "wii",
             "3": "xbox",
-            "4": "xbox360"
         }
         if target_choice == "0":
             print("Exiting program...")

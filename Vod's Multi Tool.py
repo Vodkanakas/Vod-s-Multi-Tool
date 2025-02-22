@@ -4,6 +4,9 @@ import sys
 import time
 import shutil
 import select
+import difflib
+import re
+
 
 
 # Windows-only: use msvcrt for key detection if available.
@@ -13,6 +16,31 @@ if sys.platform.startswith("win"):
 # Set base directory and master configuration file.
 BASE_DIR = os.getcwd()
 MASTER_CONFIG = os.path.join(BASE_DIR, "master.txt")
+
+# -----------------------------
+# Helper: Pause or Continue
+# -----------------------------
+def pause_or_continue(timeout=20):
+    """
+    Displays an under-construction message and waits until either the user
+    presses a key or the timeout (in seconds) is reached.
+    """
+    print("\nSorry, this is under construction for a later update. Keep a lookout!!")
+    print("Press Enter to continue or wait 20 seconds...", end="", flush=True)
+    start_time = time.time()
+    if sys.platform.startswith("win"):
+        while True:
+            if msvcrt.kbhit():
+                msvcrt.getch()
+                break
+            if time.time() - start_time > timeout:
+                break
+            time.sleep(0.1)
+    else:
+        rlist, _, _ = select.select([sys.stdin], [], [], timeout)
+        if rlist:
+            sys.stdin.readline()
+    print("\nReturning to target system selection...\n")
 
 # -----------------------------
 # Helper: Get Expected Systems
@@ -95,6 +123,9 @@ def get_multiple_selections(options, prompt):
         return options[:-1]
     return [options[i-1] for i in indices]
 
+def remove_parentheses(text):
+    return re.sub(r'\([^)]*\)', '', text).strip()
+
 # -----------------------------
 # File Sorting Functions
 # -----------------------------
@@ -173,22 +204,11 @@ def unsort_files(effective_dir):
                     print(f"Moved {file} from {folder_path} back to {base_dir}")
                 os.rmdir(folder_path)
     print("File unsorting complete.")
-    
+
+# -----------------------------
+# # Working Directory
+# -----------------------------
 def get_working_folder(target_system):
-    """
-    Reads the [Working Folder] section from Master.txt and returns the folder name
-    associated with the given target system.
-    
-    Expected Master.txt (for example):
-    
-    [Working Folder]
-    - wii = ROMS
-    - rpi = roms
-    - xbox = XBOX_ROMS
-    - xbox 360 = XBOX360_ROMS
-    
-    Uses a special mapping so that e.g. "Raspberry Pi" returns the key "rpi".
-    """
     mapping = {}
     if os.path.exists(MASTER_CONFIG):
         current_section = None
@@ -212,30 +232,29 @@ def get_working_folder(target_system):
     else:
         print("Master.txt not found. Defaulting working folder to 'Systems'.")
         mapping = {}
-    
-    # Special mapping for target system names.
-    special_keys = {
-        "Raspberry Pi": "rpi",
-        "Nintendo Wii": "wii",
-        "Microsoft XBOX": "xbox",
-        "Microsoft XBOX 360": "xbox 360"
-    }
-    key = special_keys.get(target_system, target_system.split()[-1])
+
+    # Removed special mapping; use the target system name directly.
+    key = target_system
     print("DEBUG: Working Folder mapping:", mapping)
     print("DEBUG: Looking for key:", key)
     working_folder = mapping.get(key, "Systems")
-    return working_folder
+    return working_folder\
 
 # -----------------------------
 # Run Copy to Drive
 # -----------------------------
 def run_copy_to_drive(target_system, effective_dir, selected_systems=None):
-    # Step 1: Drive Selection
+    """
+    Copies files to a selected drive based on paths in Master.txt.
+    Fix: Now filters systems based on local ROMS folder instead of the destination drive.
+    """
+
+    # Step 1: Select a Drive
     available_drives = [f"{d}:\\" for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
     if not available_drives:
         print("No available drives found. Exiting Copy to Drive...")
         return
-    print("Available drives:")
+    print("\nAvailable drives:")
     for idx, drive in enumerate(available_drives, start=1):
         print(f"{idx}. {drive}")
     drive_choice = input("Enter the number corresponding to the drive to copy to (or 0 to cancel): ").strip()
@@ -251,28 +270,48 @@ def run_copy_to_drive(target_system, effective_dir, selected_systems=None):
         print("Invalid drive selection.")
         return
     selected_drive = available_drives[drive_choice - 1]
-    
-    # Step 2: Parse Master.txt for destination mappings using the selected drive.
+
+    # Step 2: Parse Master.txt for destination mappings using the selected drive
     mapping = parse_master_drive(selected_drive)
+
+    # Step 3: Filter systems based on **local ROMS directory** (not the destination drive)
+    valid_systems = []
+    for system in os.listdir(effective_dir):  # List only local systems
+        system_path = os.path.join(effective_dir, system)
+        if not os.path.isdir(system_path):
+            continue  # Skip if it's not a directory
+
+        # Paths to check
+        games_path = system_path
+        cover_art_path = os.path.join(system_path, "renamed cover art")
+
+        # Check if both exist and have files
+        if os.path.exists(games_path) and os.path.exists(cover_art_path):
+            if os.listdir(games_path) and os.listdir(cover_art_path):  # Ensure both have files
+                valid_systems.append(system)
+
+    valid_systems.sort()  # Ensure consistent order
+
+    if not valid_systems:
+        print("\nNo systems found with both games and renamed cover art in ROMS. Exiting Copy to Drive...")
+        return
+
+    valid_systems.append("All Systems") if len(valid_systems) > 1 else None
+
+    # Step 4: Select systems for copy
+    selected_systems = get_multiple_selections(valid_systems, "\nSelect system(s) for Copy to Drive:")
     
-    # Step 3: Prompt for system selection if not provided.
     if selected_systems is None:
-        common_systems = get_common_systems(effective_dir)
-        selected_systems = get_multiple_selections(common_systems, "\nSelect system(s) for Copy to Drive:")
-        if selected_systems is None:
-            print("Cancelling Copy to Drive...")
-            return
+        print("Cancelling Copy to Drive...")
+        return
+    
+    if "All Systems" in selected_systems:
+        selected_systems = valid_systems[:-1]  # Remove "All Systems" and select all actual systems
 
     print(f"Running Copy files to Drive for target '{target_system}' on the following systems:")
-    target_prefix_map = {
-        "Raspberry Pi": "rpi",
-        "Nintendo Wii": "wii",
-        "Microsoft XBOX": "xbox",
-        "Microsoft XBOX 360": "xbox 360"
-    }
-    prefix = target_prefix_map.get(target_system, target_system.split()[-1])
-    
+
     def copy_files(src, dest):
+        """ Copies files from source to destination. """
         if not os.path.exists(dest):
             os.makedirs(dest)
         for filename in os.listdir(src):
@@ -290,49 +329,33 @@ def run_copy_to_drive(target_system, effective_dir, selected_systems=None):
                     print(f"✔ Copied {filename} → {dest}")
                 except Exception as e:
                     print(f"❌ Error copying {filename}: {e}")
-    
+
+    # Step 5: Process each selected system
     for system in selected_systems:
-        system_key = system
-        if system_key not in mapping:
+        if system not in mapping:
             print(f"No destination mapping found for system '{system}' in Master.txt.")
             continue
-        dest_mapping = mapping[system_key]
+
+        dest_mapping = mapping[system]
         print(f"  - {system}")
         src_folder = os.path.join(effective_dir, system)
-        
-        # Regular ROM files: use key "<prefix> games"
-        games_key = f"{prefix} games"
-        if games_key not in dest_mapping:
-            print(f"No 'games' destination mapping found for system '{system}' using key '{games_key}'.")
-        else:
+
+        # Copy game files
+        games_key = f"{target_system} games"
+        if games_key in dest_mapping:
             dest_games = dest_mapping[games_key]
             copy_files(src_folder, dest_games)
-        
-        # Process Multi Disc folder.
-        multi_disc_folder = os.path.join(effective_dir, "Multi Disc", system)
-        if os.path.isdir(multi_disc_folder):
-            if target_system == "Raspberry Pi":
-                multi_disc_key = "rpi multi disc"
-            else:
-                multi_disc_key = games_key
-            if multi_disc_key in dest_mapping:
-                dest_multi = dest_mapping[multi_disc_key]
-                copy_files(multi_disc_folder, dest_multi)
-            else:
-                print(f"No destination mapping for Multi Disc files for system '{system}' using key '{multi_disc_key}'.")
-        
-        # Optionally, process "renamed cover art" if present.
-        renamed_key = f"{prefix} renamed cover art"
+
+        # Copy renamed cover art
+        renamed_key = f"{target_system} renamed cover art"
         renamed_src = os.path.join(src_folder, "renamed cover art")
         if os.path.isdir(renamed_src) and renamed_key in dest_mapping:
-            copy_files(renamed_src, dest_mapping[renamed_key])
-        
-        # Optionally, process "bios" if present.
-        bios_key = f"{prefix} bios"
-        bios_src = os.path.join(src_folder, "bios")
-        if os.path.isdir(bios_src) and bios_key in dest_mapping:
-            copy_files(bios_src, dest_mapping[bios_key])
+            dest_renamed = dest_mapping[renamed_key]
+            copy_files(renamed_src, dest_renamed)
+
+    print("✅ Copy operation complete.")
     time.sleep(1)
+
 
 def run_ftp_transfer(selected_systems, target_system, effective_dir):
     print(f"Running FTP Transfer for target '{target_system}' on the following systems:")
@@ -393,46 +416,198 @@ def run_process_games(target_system, effective_dir, selected_systems=None):
         
         for rom in main_roms:
             base_rom = os.path.splitext(rom)[0]
-            matched = False
+            # Remove any parenthesized parts
+            base_rom_clean = remove_parentheses(base_rom).lower()
+
+            best_match = None
+            highest_ratio = 0.0
             for png in png_files:
-                if base_rom in os.path.splitext(png)[0]:
-                    new_name = f"{rom}.png"
-                    src_path = os.path.join(cover_art_folder, png)
-                    dst_path = os.path.join(renamed_folder, new_name)
-                    shutil.copy(src_path, dst_path)
-                    print(f"Matching {rom} -> {new_name}")
-                    matched = True
-                    break
-            if not matched:
-                print(f"No cover art match found for {rom}")
+                base_png = os.path.splitext(png)[0]
+                base_png_clean = remove_parentheses(base_png).lower()
+                ratio = difflib.SequenceMatcher(None, base_rom_clean, base_png_clean).ratio()
+                if ratio > highest_ratio:
+                    highest_ratio = ratio
+                    best_match = png
+
+            if highest_ratio >= 0.75:
+                new_name = f"{rom}.png"
+                src_path = os.path.join(cover_art_folder, best_match)
+                dst_path = os.path.join(renamed_folder, new_name)
+                shutil.copy(src_path, dst_path)
+                print(f"Matching {rom} -> {new_name} with similarity {highest_ratio:.2f}")
+            else:
+                print(f"No cover art match found for {rom} (highest similarity: {highest_ratio:.2f})")
                 if move_unmatched:
-                    associated_files = [f for f in all_files if os.path.splitext(f)[0] == base_rom]
-                    for af in associated_files:
+                    unmatched_files = [f for f in all_files if remove_parentheses(os.path.splitext(f)[0]).lower() == base_rom_clean]
+                    for af in unmatched_files:
                         src_path = os.path.join(system_path, af)
                         dst_path = os.path.join(unmatched_folder, af)
-                        shutil.move(src_path, dst_path)
-                        print(f"Moved unmatched file {af} to 'unmatched cover art'")
+                        if os.path.exists(src_path):
+                            shutil.move(src_path, dst_path)
+                            print(f"Moved unmatched file {af} to 'unmatched cover art'")
+                        else:
+                            print(f"File {src_path} not found, skipping.")
+
+
     time.sleep(1)
 
+# -----------------------------
+# Restore Unmatched Games
+# -----------------------------
+def restore_unmatched_games(effective_dir, selected_systems=None):
+    print("\nRestoring unmatched games and cleaning up renamed cover art...")
+
+    # Step 1: Get list of systems if not provided
+    if selected_systems is None:
+        common_systems = get_common_systems(effective_dir)
+        selected_systems = get_multiple_selections(common_systems, "\nSelect system(s) to restore unmatched games:")
+        if selected_systems is None:
+            print("Cancelling restore process...")
+            return
+
+    for system in selected_systems:
+        system_path = os.path.join(effective_dir, system)
+        unmatched_folder = os.path.join(system_path, "unmatched cover art")
+        renamed_folder = os.path.join(system_path, "renamed cover art")
+
+        # Step 2: Move files back from unmatched cover art
+        if os.path.exists(unmatched_folder):
+            for file in os.listdir(unmatched_folder):
+                src_path = os.path.join(unmatched_folder, file)
+                dest_path = os.path.join(system_path, file)
+                try:
+                    shutil.move(src_path, dest_path)
+                    print(f"✔ Moved {file} back to {system_path}")
+                except Exception as e:
+                    print(f"❌ Error moving {file}: {e}")
+
+            # Step 3: Delete the now-empty unmatched folder
+            try:
+                os.rmdir(unmatched_folder)
+                print(f"🗑 Deleted empty 'unmatched cover art' folder for {system}")
+            except OSError:
+                print(f"⚠ Could not delete 'unmatched cover art' for {system} (not empty).")
+
+        # Step 4: Delete renamed cover art folder
+        if os.path.exists(renamed_folder):
+            try:
+                shutil.rmtree(renamed_folder)  # Deletes the folder and all its contents
+                print(f"🗑 Deleted 'renamed cover art' folder for {system}")
+            except Exception as e:
+                print(f"❌ Error deleting 'renamed cover art' for {system}: {e}")
+
+    print("\n✅ Restore process complete!")
+    time.sleep(1)
+
+
+# -----------------------------
+# Run Delete Drive Content
+# -----------------------------
+def run_delete_drive_content(target_system):
+    """
+    Deletes content on the selected drive based on the paths in master.txt.
+    Only shows consoles that have files in both the 'games' and 'renamed cover art' locations.
+    """
+
+    # Step 1: Drive Selection
+    available_drives = [f"{d}:\\" for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+    if not available_drives:
+        print("No available drives found. Exiting Delete Drive Content...")
+        return
+    print("\nAvailable drives:")
+    for idx, drive in enumerate(available_drives, start=1):
+        print(f"{idx}. {drive}")
+    drive_choice = input("Enter the number corresponding to the drive to delete content from (or 0 to cancel): ").strip()
+    if drive_choice == "0":
+        print("Cancelling Delete Drive Content...")
+        return
+    try:
+        drive_choice = int(drive_choice)
+    except ValueError:
+        print("Invalid drive selection.")
+        return
+    if drive_choice < 1 or drive_choice > len(available_drives):
+        print("Invalid drive selection.")
+        return
+    selected_drive = available_drives[drive_choice - 1]
+
+    # Step 2: Parse Master.txt for destination mappings
+    mapping = parse_master_drive(selected_drive)
+
+    # Step 3: Filter consoles with content in both "games" and "renamed cover art"
+    prefix = target_system
+    valid_systems = []
+
+    for system, dest_mapping in mapping.items():
+        games_path = dest_mapping.get(f"{prefix} games", None)
+        cover_art_path = dest_mapping.get(f"{prefix} renamed cover art", None)
+
+        if games_path and cover_art_path and os.path.exists(games_path) and os.path.exists(cover_art_path):
+            if os.listdir(games_path) and os.listdir(cover_art_path):
+                valid_systems.append(system)
+
+    valid_systems.sort()  # <-- Sorting the system names alphabetically
+
+    if not valid_systems:
+        print("\nNo systems found with both games and renamed cover art. Exiting Delete Drive Content...")
+        return
+
+    valid_systems.append("All Systems") if len(valid_systems) > 1 else None
+
+    # Step 4: Select systems to delete from
+    selected_systems = get_multiple_selections(valid_systems, "\nSelect system(s) to delete content from:")
+    
+    if selected_systems is None:
+        print("Deletion cancelled.")
+        return
+    
+    if "All Systems" in selected_systems:
+        selected_systems = valid_systems[:-1]  # Remove "All Systems" and select all actual systems
+
+    # Step 5: Confirm Deletion
+    confirm_delete = input("⚠ WARNING: Are you sure you want to delete existing files? This action is irreversible! (y/n): ").strip().lower()
+    if confirm_delete != "y":
+        print("Deletion cancelled.")
+        return
+
+    def delete_files(dest):
+        """ Delete all contents in the specified destination path. """
+        if os.path.exists(dest):
+            for file_or_folder in os.listdir(dest):
+                full_path = os.path.join(dest, file_or_folder)
+                try:
+                    if os.path.isfile(full_path) or os.path.islink(full_path):
+                        os.remove(full_path)
+                        print(f"🗑 Deleted file: {full_path}")
+                    elif os.path.isdir(full_path):
+                        shutil.rmtree(full_path)
+                        print(f"🗑 Deleted folder: {full_path}")
+                except Exception as e:
+                    print(f"⚠ Error deleting {full_path}: {e}")
+
+    # Step 6: Process each selected system and delete files
+    print(f"\n🚀 Deleting content on drive {selected_drive} for selected systems...")
+
+    for system in selected_systems:
+        dest_mapping = mapping.get(system, {})
+        
+        games_path = dest_mapping.get(f"{prefix} games", None)
+        cover_art_path = dest_mapping.get(f"{prefix} renamed cover art", None)
+
+        if games_path:
+            print(f"🧹 Deleting files in: {games_path}...")
+            delete_files(games_path)
+
+        if cover_art_path:
+            print(f"🧹 Deleting files in: {cover_art_path}...")
+            delete_files(cover_art_path)
+
+    print("✅ Drive cleanup complete.")
 
 # -----------------------------
 # Parse Master Function
 # -----------------------------
 def parse_master_drive(selected_drive):
-    """
-    Reads Master.txt (ignoring the [Working Folder] section) and returns a mapping
-    dictionary that maps each system alias (exactly as written) to a dictionary of destination
-    paths. In the mapping values, the string "drive:" is replaced with selected_drive.
-    
-    For example, if Master.txt contains:
-    
-    [Playstation|PS1|PSX]
-    - wii bios = drive:\wiisxrx\bios
-    - wii games = drive:\wiisxrx\isos
-    - wii renamed cover art = drive:\wiiflow\boxcovers\Playstation
-    
-    and if selected_drive is "D:\", then "drive:" is replaced with "D:\".
-    """
     mapping = {}
     if not os.path.exists(MASTER_CONFIG):
         return mapping
@@ -475,10 +650,10 @@ def main():
         print("4. Microsoft XBOX 360")
         target_choice = input("Enter your choice (0 will exit): ").strip()
         target_map = {
-            "1": "Raspberry Pi",
-            "2": "Nintendo Wii",
-            "3": "Microsoft XBOX",
-            "4": "Microsoft XBOX 360"
+            "1": "rpi",
+            "2": "wii",
+            "3": "xbox",
+            "4": "xbox360"
         }
         if target_choice == "0":
             print("Exiting program...")
@@ -495,22 +670,34 @@ def main():
             while True:
                 print(f"\nOperations Menu for {target_system}:")
                 print("1. Match cover art to games")
-                print("2. Copy files to drive")
+                print("2. Undo matching of cover art")
+                print("3. Copy files to drive")
+                print("4. Delete content from drive")
+                print("5. Sort files")
+                print("6. Unsort files")
                 op_choice = input("Enter your selection (or 0 to return): ").strip()
+
                 if op_choice == "0":
                     break
                 elif op_choice == "1":
                     run_process_games(target_system, effective_dir)
                 elif op_choice == "2":
+                    restore_unmatched_games(effective_dir)
+                elif op_choice == "3":
                     run_copy_to_drive(target_system, effective_dir)
-
+                elif op_choice == "4":
+                    run_delete_drive_content(target_system)
+                elif op_choice == "5":
+                    sort_files(effective_dir)
+                elif op_choice == "6":
+                    unsort_files(effective_dir)
                 else:
                     print("Invalid selection. Try again.")
-                input("\nPress Enter to return to the operations menu...")
+
+                print("\nOperation Complete!! Returning to Operations Menu...")
+                time.sleep(2)
         else:
             pause_or_continue()
-
-        input("\nPress Enter to return to the target system selection...")
 
 if __name__ == "__main__":
     main()

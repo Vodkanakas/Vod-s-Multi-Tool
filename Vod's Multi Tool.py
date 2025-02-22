@@ -370,14 +370,6 @@ def run_multi_disc_games(selected_systems):
     time.sleep(1)
 
 # -----------------------------
-# Run FTP Transfer
-# -----------------------------
-def run_ftp_transfer(target_system):
-    ip_address = input("Enter the IP address of the FTP device: ").strip()
-    print(f"Starting FTP Transfer to {ip_address} for {target_system}...")
-    time.sleep(1)
-
-# -----------------------------
 # Run Cover Art Matching
 # -----------------------------
 def run_process_games(target_system, effective_dir, selected_systems=None):

@@ -4,6 +4,7 @@ This is a script in python to process roms collection for different uses. I star
 This is where you would select where the files are going. Only `Nintendo Wii` works currently though. The mappings in `Master.txt` are referenced by which you choose (ie. `Nintendo Wii` will look for mappings with prefix `- wii`). Im hoping to be able to rename the folders dynamically based on which system they are being put on (ie. For Sega CD if you select `Wii` it will use the naming `ROMS\Mega CD` and then selecting `rpi` would name it `roms\segacd`). Still learning how to do this so it may be a while...
 ## Raspberry Pi
 Everyone loves Raspberry Pi's right... right?
+
 Under construction ATM...
 ## Nintendo Wii
 Looks for the folder ROMS and the naming scheme of Wiiflow.
@@ -21,4 +22,5 @@ This sorts the the files if they have a `region` tag. I have it set to remove `P
 This reverses the `region` sort adding `PAL` games back to `ROMS\system name
 ## OG XBOX
 I have very little experience in XBOX stuff so I'm interested on what I can actually add here
+
 Under construction ATM...

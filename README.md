@@ -1,6 +1,8 @@
+**Warning: Use at your own descretion!! I am not responsible for anything that goes wrong when using this. I have done my best to do this right so that it works the way its suppose to.** On that note please let me know if something isnt working as intended :)
+
 This is a script in python to process roms collection for different uses. I started working on this due to influence from [SpaceGhost1993's Tool](https://github.com/SpaceGhost1993/DEM-Wiiflow-Tools), great tool but there were some stuff I just didnt prefer, so I decided to make an all in one tool. The idea is to have it all in one go or system by system if you choose.
 
-# Main Menu
+# **Main Menu**
 This is where you would select where the files are going. Only `Nintendo Wii` works currently though. The mappings in `Master.txt` are referenced by which you choose (ie. `Nintendo Wii` will look for mappings with prefix `- wii`). Im hoping to be able to rename the folders dynamically based on which system they are being put on (ie. For Sega CD if you select `Wii` it will use the naming `ROMS\Mega CD` and then selecting `rpi` would name it `roms\segacd`). Still learning how to do this so it may be a while...
 ## Raspberry Pi
 Everyone loves Raspberry Pi's right... right?
